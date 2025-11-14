@@ -6,6 +6,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +14,11 @@ public class UserDAO {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public boolean registerUser(User user){
-        String hashedPassword = passwordEncoder.encode(user.getPasswordHash());
+        System.out.println("registerUser function line : 17  \nenterd password: "+ user.getPasswordHash());
+                String hashedPassword = passwordEncoder.encode(user.getPasswordHash());
         user.setPasswordHash(hashedPassword);
+
+        System.out.println("registerUser function line : 21  \nhashed password: " + hashedPassword);
 
         String query = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
         boolean success= false;
@@ -30,7 +34,11 @@ public class UserDAO {
                 stmt.setString(2, user.getEmail());
                 stmt.setString(3, hashedPassword);
 
+                System.out.println("regesterUser function: line  \nusername = " + user.getUserName() + "\nemail = " + user.getEmail()+"\npassword_hash = " + user.getPasswordHash());
+
                 int affectedRow = stmt.executeUpdate();
+
+                System.out.println("regestraionuser function : line 41 \naffectedRow = " + affectedRow);
 
                 if (affectedRow == 1){
                     conn.commit();
@@ -58,6 +66,35 @@ public class UserDAO {
             }
         }
         return success;
+    }
+
+    public boolean verifyPassword(String submittedPlainPassword, String storedHash) {
+        return passwordEncoder.matches(submittedPlainPassword, storedHash);
+    }
+
+    public User getUserByEmail(String email) {
+        String query = "SELECT * FROM users WHERE email = ?";
+
+        try (Connection conn = Database.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(query)){
+
+            stmt.setString(1, email);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()){
+                    return new User(
+                            rs.getInt("id"),
+                            rs.getString("username"),
+                            rs.getString("email"),
+                            rs.getString("password_hash"),
+                            rs.getString("created_at")
+                    );
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 
