@@ -156,7 +156,7 @@ public class ProductDAO {
     }
 
     public boolean delete(int id){
-        String query = "DELETE FROM product WHERE id = ?";
+        String query = "DELETE FROM products WHERE id = ?";
         boolean success = false;
         Connection conn = null;
 

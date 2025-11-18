@@ -1,20 +1,35 @@
 package com.abdellah.tp1ministore.util;
 
 import org.sqlite.SQLiteDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 public class Database {
     private static final String URL = "jdbc:sqlite:/Users/mac/Documents/CI-GI/S3/javaee/tp-projects/database/tp1-ministore.db";
-    private static final SQLiteDataSource dataSource;
+    private static final DataSource dataSource;
 
     static {
-        dataSource = new SQLiteDataSource();
-        dataSource.setUrl(URL);
-        System.out.println(System.getProperty("user.dir"));
-        System.out.println(System.getProperty("catalina.base"));
+        HikariConfig config = new HikariConfig();
+
+//        config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+//        config.addDataSourceProperty("serverName", "localhost");
+//        config.addDataSourceProperty("portNumber", "5432");
+//        config.addDataSourceProperty("user", "postgres");
+//        config.addDataSourceProperty("password", "postgres");
+
+        config.setDriverClassName("org.sqlite.JDBC");
+        config.setJdbcUrl(URL);
+
+        config.setMaximumPoolSize(10);
+        config.setMinimumIdle(5);
+        config.setIdleTimeout(30000);
+
+        dataSource = new HikariDataSource(config);
 
         initDatabase();
     }
