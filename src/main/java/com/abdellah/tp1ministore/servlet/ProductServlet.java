@@ -23,21 +23,39 @@ public class ProductServlet extends HttpServlet {
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
+        String idParm = request.getParameter("id");
 
-        if ("ADD".equals(action)) {
-            System.out.println("add method");
+        if ("ADD".equals(action) || "EDIT".equals(action)) {
+            if ("EDIT".equals(action)) {
+                try {
+                    if (idParm == null) throw new NumberFormatException();
+                    int id = Integer.parseInt(idParm);
+                    Product product = productDAO.getProductById(id);
+                    request.setAttribute("product", product);
+                } catch (NumberFormatException e) {
+                    response.sendRedirect(request.getContextPath() + "/products?error=InvalidID");
+                    return;
+                }
+            }
             request.getRequestDispatcher("/WEB-INF/views/product/form.jsp").forward(request, response);
+            return;
         }
 
         String success = request.getParameter("success");
         String error = request.getParameter("error");
 
-        if ("WDeleted".equals(success)) {
-            request.setAttribute("success", "Product deleted successfully!");
+        switch (success) {
+            case "Deleted" -> request.setAttribute("success", "Product deleted successfully!");
+            case "Updated" -> request.setAttribute("success", "Product updated successfully!");
+            case "Added" -> request.setAttribute("success", "Product added successfully!");
+            case null, default -> request.setAttribute("success", success);
         }
 
-        if ("FDeleted".equals(error)) {
-            request.setAttribute("error", "Product deleted Failed!");
+        switch (error) {
+            case "Deleted" -> request.setAttribute("error", "Product deleted Failed!");
+            case "Updated" -> request.setAttribute("error", "Product updated Failed!");
+            case "Added" -> request.setAttribute("error", "Product added Failed!");
+            case null, default -> request.setAttribute("error", error);
         }
 
 
@@ -48,11 +66,52 @@ public class ProductServlet extends HttpServlet {
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String method = request.getParameter("_method");
-        System.out.println("Method: " + method);
 
         if ("DELETE".equals(method)) {
             handleDelete(request, response);
+            return;
         }
+
+        String id = request.getParameter("id");
+
+        if (id == null || id.trim().isEmpty()) {
+            handleAdd(request, response);
+            return;
+        }
+        handleEdit(request, response);
+    }
+
+    private void handleAdd(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Product product = new Product(
+                request.getParameter("name"),
+                request.getParameter("description"),
+                Double.parseDouble(request.getParameter("price"))
+        );
+
+        boolean success = productDAO.insert(product);
+        if (!success) {
+            response.sendRedirect(request.getContextPath() + "/products?error=Added");
+            return;
+        }
+        response.sendRedirect(request.getContextPath() + "/products?success=Added");
+    }
+
+    private void handleEdit(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Product product = new Product(
+                Integer.parseInt(request.getParameter("id")),
+                request.getParameter("name"),
+                request.getParameter("description"),
+                Double.parseDouble(request.getParameter("price")),
+                request.getParameter("createdAt")
+        );
+
+        boolean success = productDAO.update(product);
+
+        if (!success) {
+            response.sendRedirect(request.getContextPath() + "/products?error=Updated");
+            return;
+        }
+        response.sendRedirect(request.getContextPath() + "/products?success=Updated");
     }
 
     private void handleDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -67,10 +126,10 @@ public class ProductServlet extends HttpServlet {
         boolean success =  productDAO.delete(id);
 
         if (!success) {
-            response.sendRedirect(request.getContextPath() + "/products?error=FDeleted");
+            response.sendRedirect(request.getContextPath() + "/products?error=Deleted");
             return;
         }
-        response.sendRedirect(request.getContextPath() + "/products?success=WDeleted");
+        response.sendRedirect(request.getContextPath() + "/products?success=Deleted");
     }
 
 }

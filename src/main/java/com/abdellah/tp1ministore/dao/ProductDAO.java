@@ -36,7 +36,7 @@ public class ProductDAO {
     }
 
     public Product getProductById(int id) {
-        String query = "SELECT * FROM product WHERE id = ?";
+        String query = "SELECT * FROM products WHERE id = ?";
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query);){
@@ -109,7 +109,7 @@ public class ProductDAO {
     }
 
     public boolean update(Product product){
-        String query = "UPDATE product SET name = ?, description = ?, price = ? WHERE id = ?";
+        String query = "UPDATE products SET name = ?, description = ?, price = ? WHERE id = ?";
         boolean success = false;
         Connection conn = null;
 
