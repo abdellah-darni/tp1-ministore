@@ -1,6 +1,5 @@
 package com.abdellah.tp1ministore.servlet;
 
-
 import com.abdellah.tp1ministore.dao.ProductDAO;
 import com.abdellah.tp1ministore.model.Product;
 import jakarta.servlet.ServletException;
@@ -22,6 +21,8 @@ public class ProductServlet extends HttpServlet {
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        processMessages(request);
+
         String action = request.getParameter("action");
         String idParm = request.getParameter("id");
 
@@ -41,27 +42,34 @@ public class ProductServlet extends HttpServlet {
             return;
         }
 
-        String success = request.getParameter("success");
-        String error = request.getParameter("error");
-
-        switch (success) {
-            case "Deleted" -> request.setAttribute("success", "Product deleted successfully!");
-            case "Updated" -> request.setAttribute("success", "Product updated successfully!");
-            case "Added" -> request.setAttribute("success", "Product added successfully!");
-            case null, default -> request.setAttribute("success", success);
-        }
-
-        switch (error) {
-            case "Deleted" -> request.setAttribute("error", "Product deleted Failed!");
-            case "Updated" -> request.setAttribute("error", "Product updated Failed!");
-            case "Added" -> request.setAttribute("error", "Product added Failed!");
-            case null, default -> request.setAttribute("error", error);
-        }
-
-
         List<Product> products = productDAO.getAllProducts();
         request.setAttribute("products", products);
         request.getRequestDispatcher("/WEB-INF/views/product/list.jsp").forward(request, response);
+    }
+
+    private void processMessages(HttpServletRequest request) {
+        String success = request.getParameter("success");
+        String error = request.getParameter("error");
+
+        if (success != null) {
+            switch (success) {
+                case "Deleted" -> request.setAttribute("success", "Product deleted successfully!");
+                case "Updated" -> request.setAttribute("success", "Product updated successfully!");
+                case "Added" -> request.setAttribute("success", "Product added successfully!");
+                default -> request.setAttribute("success", success);
+            }
+        }
+
+        if (error != null) {
+            switch (error) {
+                case "Deleted" -> request.setAttribute("error", "Product deletion Failed!");
+                case "Updated" -> request.setAttribute("error", "Product update Failed!");
+                case "Added" -> request.setAttribute("error", "Product addition Failed!");
+                case "InvalidData" -> request.setAttribute("error", "Please check your input data (Name/Price required).");
+                case "InvalidID" -> request.setAttribute("error", "Invalid Product ID.");
+                default -> request.setAttribute("error", error);
+            }
+        }
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -113,13 +121,11 @@ public class ProductServlet extends HttpServlet {
         String nameParm = request.getParameter("name");
         String priceParm = request.getParameter("price");
 
-        System.out.println("id: " + idParm + " name: " + nameParm + " price: " + priceParm);
-
         try {
             if (idParm == null || idParm.trim().isEmpty() || nameParm == null || nameParm.trim().isEmpty() || priceParm == null || priceParm.trim().isEmpty()) {
                 throw new IllegalArgumentException();
             }
-            System.out.println("id: " + idParm + " name: " + nameParm + " price: " + priceParm);
+
             Product product = new Product(
                     Integer.parseInt(idParm),
                     nameParm,
@@ -136,7 +142,7 @@ public class ProductServlet extends HttpServlet {
             }
             response.sendRedirect(request.getContextPath() + "/products?success=Updated");
         } catch (IllegalArgumentException e) {
-            response.sendRedirect(request.getContextPath() + "/products?error=InvalidData");
+            response.sendRedirect(request.getContextPath() + "/products?action=EDIT&id=" + idParm + "&error=InvalidData");
         }
     }
 

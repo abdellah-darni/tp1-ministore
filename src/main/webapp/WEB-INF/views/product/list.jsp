@@ -197,6 +197,14 @@
         </div>
     </c:if>
 
+    <c:if test="${not empty error}">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert"
+             style="background-color: #f8d7da; color: #842029; border-radius: 12px;">
+            <i class="fas fa-exclamation-circle me-2"></i>${error}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </c:if>
+
     <div class="row g-4">
         <c:choose>
             <c:when test="${not empty products}">

@@ -215,6 +215,22 @@
                         </div>
                     </div>
 
+                    <c:if test="${not empty success}">
+                        <div class="alert alert-success d-flex align-items-center mb-4 border-0" role="alert"
+                             style="background-color: #d1fae5; color: #065f46; border-radius: 10px;">
+                            <i class="fas fa-check-circle me-3"></i>
+                            <div>${success}</div>
+                        </div>
+                    </c:if>
+
+                    <c:if test="${not empty error}">
+                        <div class="alert alert-danger d-flex align-items-center mb-4 border-0" role="alert"
+                             style="background-color: #fee2e2; color: #991b1b; border-radius: 10px;">
+                            <i class="fas fa-exclamation-triangle me-3"></i>
+                            <div>${error}</div>
+                        </div>
+                    </c:if>
+
                     <form action="${pageContext.request.contextPath}/products" method="post">
 
                         <input type="hidden" name="id" value="${product.id}">
