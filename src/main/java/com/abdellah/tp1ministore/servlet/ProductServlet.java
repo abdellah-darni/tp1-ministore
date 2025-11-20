@@ -21,6 +21,8 @@ public class ProductServlet extends HttpServlet {
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//        if(true) throw new RuntimeException("Test Error");
+
         processMessages(request);
 
         String action = request.getParameter("action");
