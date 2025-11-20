@@ -82,54 +82,82 @@ public class ProductServlet extends HttpServlet {
     }
 
     private void handleAdd(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Product product = new Product(
-                request.getParameter("name"),
-                request.getParameter("description"),
-                Double.parseDouble(request.getParameter("price"))
-        );
+        String nameParm = request.getParameter("name");
+        String priceParm = request.getParameter("price");
 
-        boolean success = productDAO.insert(product);
-        if (!success) {
-            response.sendRedirect(request.getContextPath() + "/products?error=Added");
-            return;
+        try {
+            if (nameParm == null || nameParm.trim().isEmpty() || priceParm == null || priceParm.trim().isEmpty()) {
+                throw new IllegalArgumentException();
+            }
+
+            Product product = new Product(
+                    nameParm,
+                    request.getParameter("description"),
+                    Double.parseDouble(priceParm)
+            );
+
+            boolean success = productDAO.insert(product);
+            if (!success) {
+                response.sendRedirect(request.getContextPath() + "/products?error=Added");
+                return;
+            }
+            response.sendRedirect(request.getContextPath() + "/products?success=Added");
+
+        } catch (IllegalArgumentException e) {
+            response.sendRedirect(request.getContextPath() + "/products?action=ADD&error=InvalidData");
         }
-        response.sendRedirect(request.getContextPath() + "/products?success=Added");
     }
 
     private void handleEdit(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Product product = new Product(
-                Integer.parseInt(request.getParameter("id")),
-                request.getParameter("name"),
-                request.getParameter("description"),
-                Double.parseDouble(request.getParameter("price")),
-                request.getParameter("createdAt")
-        );
+        String idParm = request.getParameter("id");
+        String nameParm = request.getParameter("name");
+        String priceParm = request.getParameter("price");
 
-        boolean success = productDAO.update(product);
+        System.out.println("id: " + idParm + " name: " + nameParm + " price: " + priceParm);
 
-        if (!success) {
-            response.sendRedirect(request.getContextPath() + "/products?error=Updated");
-            return;
+        try {
+            if (idParm == null || idParm.trim().isEmpty() || nameParm == null || nameParm.trim().isEmpty() || priceParm == null || priceParm.trim().isEmpty()) {
+                throw new IllegalArgumentException();
+            }
+            System.out.println("id: " + idParm + " name: " + nameParm + " price: " + priceParm);
+            Product product = new Product(
+                    Integer.parseInt(idParm),
+                    nameParm,
+                    request.getParameter("description"),
+                    Double.parseDouble(priceParm),
+                    request.getParameter("createdAt")
+            );
+
+            boolean success = productDAO.update(product);
+
+            if (!success) {
+                response.sendRedirect(request.getContextPath() + "/products?error=Updated");
+                return;
+            }
+            response.sendRedirect(request.getContextPath() + "/products?success=Updated");
+        } catch (IllegalArgumentException e) {
+            response.sendRedirect(request.getContextPath() + "/products?error=InvalidData");
         }
-        response.sendRedirect(request.getContextPath() + "/products?success=Updated");
     }
 
     private void handleDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String idString = request.getParameter("id");
+        String idParm = request.getParameter("id");
 
-        if (idString == null) {
-            response.sendRedirect(request.getContextPath() + "/products?error=MissingID");
-            return;
+        try {
+            if (idParm == null || idParm.trim().isEmpty()) {
+                throw new IllegalArgumentException();
+            }
+
+            int id = Integer.parseInt(idParm);
+            boolean success = productDAO.delete(id);
+            if (!success) {
+                response.sendRedirect(request.getContextPath() + "/products?error=Deleted");
+                return;
+            }
+            response.sendRedirect(request.getContextPath() + "/products?success=Deleted");
+        } catch (IllegalArgumentException e) {
+            response.sendRedirect(request.getContextPath() + "/products?error=InvalidData");
         }
-
-        int id = Integer.parseInt(idString);
-        boolean success =  productDAO.delete(id);
-
-        if (!success) {
-            response.sendRedirect(request.getContextPath() + "/products?error=Deleted");
-            return;
-        }
-        response.sendRedirect(request.getContextPath() + "/products?success=Deleted");
     }
 
 }
