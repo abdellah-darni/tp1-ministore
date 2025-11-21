@@ -2,6 +2,8 @@ package com.abdellah.tp1ministore.dao;
 
 import com.abdellah.tp1ministore.model.Product;
 import com.abdellah.tp1ministore.util.Database;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductDAO {
+    private static final Logger logger = LoggerFactory.getLogger(ProductDAO.class);
 
     public List<Product> getAllProducts() {
         List<Product> products = new ArrayList<>();
@@ -30,7 +33,7 @@ public class ProductDAO {
             }
 
         } catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error getting all products", e);
         }
         return products;
     }
@@ -56,7 +59,7 @@ public class ProductDAO {
             }
 
         } catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error getting product by ID: " + id, e);
         }
         return null;
     }
@@ -82,17 +85,19 @@ public class ProductDAO {
                 if (affectedRows == 1) {
                     conn.commit();
                     success = true;
+                } else {
+                    logger.warn("Query executed but 0 rows affected: {}", query);
                 }
             }
 
         } catch (Exception e){
-            e.printStackTrace();
+            logger.error("Transaction Failed. Rolling back.", e);
 
             if (conn != null) {
                 try {
                     conn.rollback();
                 } catch (Exception rollbackerr) {
-                    rollbackerr.printStackTrace();
+                    logger.error("Rollback failed", rollbackerr);
                 }
             }
         } finally {
@@ -101,7 +106,7 @@ public class ProductDAO {
                     conn.setAutoCommit(true);
                     conn.close();
                 } catch (Exception closeerr) {
-                    closeerr.printStackTrace();
+                    logger.error("Connection close failed", closeerr);
                 }
             }
         }
@@ -130,16 +135,18 @@ public class ProductDAO {
                 if (affectedRows == 1) {
                     conn.commit();
                     success = true;
+                }else  {
+                    logger.warn("Query executed but 0 rows affected: {}", query);
                 }
             }
         } catch (Exception e){
-            e.printStackTrace();
+            logger.error("Transaction Failed. Rolling back.", e);
 
             if (conn != null) {
                 try {
                     conn.rollback();
                 } catch (Exception rollbackerr) {
-                    rollbackerr.printStackTrace();
+                    logger.error("Rollback failed", rollbackerr);
                 }
             }
         } finally {
@@ -148,7 +155,7 @@ public class ProductDAO {
                     conn.setAutoCommit(true);
                     conn.close();
                 } catch (Exception closeerr) {
-                    closeerr.printStackTrace();
+                    logger.error("Connection close failed", closeerr);
                 }
             }
         }
@@ -173,6 +180,8 @@ public class ProductDAO {
                 if (affectedRows == 1) {
                     conn.commit();
                     success = true;
+                } else {
+                    logger.warn("Query executed but 0 rows affected: {}", query);
                 }
             }
         } catch (Exception e){
@@ -181,7 +190,7 @@ public class ProductDAO {
                 try {
                     conn.rollback();
                 } catch (Exception rollbackerr) {
-                    rollbackerr.printStackTrace();
+                    logger.error("Rollback failed", rollbackerr);
                 }
             }
         } finally {
@@ -190,7 +199,7 @@ public class ProductDAO {
                     conn.setAutoCommit(true);
                     conn.close();
                 } catch (Exception closeerr) {
-                    closeerr.printStackTrace();
+                    logger.error("Connection close failed", closeerr);
                 }
             }
         }

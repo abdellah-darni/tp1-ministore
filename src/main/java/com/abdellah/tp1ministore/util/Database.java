@@ -2,6 +2,8 @@ package com.abdellah.tp1ministore.util;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -9,6 +11,7 @@ import java.sql.Statement;
 
 public class Database {
 
+    private static final Logger logger = LoggerFactory.getLogger(Database.class);
     private static HikariDataSource dataSource;
 
     static {
@@ -21,17 +24,18 @@ public class Database {
         String dbPass = System.getenv("MYSQL_PASSWORD");
 
         try {
-            System.out.println("--- Connecting to Database ---");
-            System.out.println("Target: " + dbUrl);
+            logger.info("--- Initializing Data Source ---");
+            logger.debug("Target URL (Spy): {}", dbUrl);
+            logger.debug("User: {}", dbUser);
 
             HikariConfig config = new HikariConfig();
 
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            Class.forName("com.p6spy.engine.spy.P6SpyDriver");
 
             config.setJdbcUrl(dbUrl);
             config.setUsername(dbUser);
             config.setPassword(dbPass);
-            config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+            config.setDriverClassName("com.p6spy.engine.spy.P6SpyDriver");
 
             config.setMaximumPoolSize(10);
             config.setMinimumIdle(5);
@@ -40,12 +44,11 @@ public class Database {
             dataSource = new HikariDataSource(config);
 
             try (Connection conn = dataSource.getConnection()) {
-                System.out.println("--- SUCCESS: Connected to MySQL! ---");
+                logger.info("--- SUCCESS: Connected to MySQL via P6Spy! ---");
             }
 
         } catch (Exception e) {
-            System.err.println("!!! FATAL: Could not connect to MySQL Database !!!");
-            System.err.println("Error: " + e.getMessage());
+            logger.error("FATAL: Could not connect to MySQL Database", e);
             throw new RuntimeException("Database Connection Failed", e);
         }
 
@@ -53,6 +56,7 @@ public class Database {
     }
 
     public static Connection getConnection() throws SQLException {
+        logger.trace("Connection requested from pool");
         return dataSource.getConnection();
     }
 
@@ -80,14 +84,13 @@ public class Database {
         try (Connection connection = dataSource.getConnection();
              Statement stmt = connection.createStatement()) {
 
+            logger.debug("Checking/Creating tables...");
             stmt.executeUpdate(createUserTable);
             stmt.executeUpdate(createProductTable);
-
-            System.out.println("--- MySQL Tables Verified/Created ---");
+            logger.info("--- MySQL Tables Verified/Created ---");
 
         } catch (SQLException e) {
-            System.err.println("!!! Database Table Initialization Failed !!!");
-            e.printStackTrace();
+            logger.error("Database Table Initialization Failed", e);
         }
     }
 }

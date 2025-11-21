@@ -2,20 +2,23 @@ package com.abdellah.tp1ministore.dao;
 
 import com.abdellah.tp1ministore.model.User;
 import com.abdellah.tp1ministore.util.Database;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
+
 
 public class UserDAO {
+    private static final Logger logger = LoggerFactory.getLogger(UserDAO.class);
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public boolean registerUser(User user){
-        System.out.println("registerUser function line : 17  \nenterd password: "+ user.getPasswordHash());
-                String hashedPassword = passwordEncoder.encode(user.getPasswordHash());
+        logger.debug("Attempting to register user: {}", user.getEmail());
+
+        String hashedPassword = passwordEncoder.encode(user.getPasswordHash());
         user.setPasswordHash(hashedPassword);
 
         System.out.println("registerUser function line : 21  \nhashed password: " + hashedPassword);
@@ -43,16 +46,17 @@ public class UserDAO {
                 if (affectedRow == 1){
                     conn.commit();
                     success = true;
+                    logger.info("User registered successfully: {}", user.getEmail());
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Registration Transaction Failed", e);
 
             if (conn != null){
                 try{
                     conn.rollback();
                 } catch (Exception rollbackerr){
-                    rollbackerr.printStackTrace();
+                    logger.error("Rollback Transaction Failed", rollbackerr);
                 }
             }
         } finally {
@@ -61,7 +65,7 @@ public class UserDAO {
                     conn.setAutoCommit(true);
                     conn.close();
                 } catch (Exception closeerr){
-                    closeerr.printStackTrace();
+                    logger.error("Connection close failed", closeerr);
                 }
             }
         }
@@ -69,7 +73,11 @@ public class UserDAO {
     }
 
     public boolean verifyPassword(String submittedPlainPassword, String storedHash) {
-        return passwordEncoder.matches(submittedPlainPassword, storedHash);
+        boolean match = passwordEncoder.matches(submittedPlainPassword, storedHash);
+        if(!match) {
+            logger.warn("Password verification failed");
+        }
+        return match;
     }
 
     public User getUserByEmail(String email) {
@@ -92,7 +100,7 @@ public class UserDAO {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("getUserByEmail failed", e);
         }
         return null;
     }
