@@ -183,7 +183,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-theme-dark" href="${pageContext.request.contextPath}/logout">
+                    <a class="nav-link text-theme-dark" href="${pageContext.request.contextPath}/login?logout=true">
                         <i class="fas fa-sign-out-alt me-1"></i>Logout
                     </a>
                 </li>

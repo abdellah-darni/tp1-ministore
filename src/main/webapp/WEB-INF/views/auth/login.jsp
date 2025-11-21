@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -262,15 +263,26 @@
             z-index: 1;
         }
 
-        /* Alert */
+        /* Alert Styles */
         .alert-custom {
             border: none;
             border-radius: 12px;
             padding: 1rem;
-            background: rgba(243, 139, 168, 0.1);
-            border-left: 4px solid #f38ba8;
             margin-bottom: 1.5rem;
             animation: shake 0.5s ease-in-out;
+            border-left: 4px solid;
+        }
+
+        .alert-error {
+            background: rgba(243, 139, 168, 0.1);
+            border-left-color: #f38ba8;
+            color: #991b1b;
+        }
+
+        .alert-success {
+            background: rgba(166, 227, 161, 0.1);
+            border-left-color: #a6e3a1;
+            color: #065f46;
         }
 
         @keyframes shake {
@@ -327,14 +339,23 @@
                 <p class="form-subtitle">Sign in to continue to MiniStore</p>
             </div>
 
-            <!-- Error Alert -->
-            <% if (request.getAttribute("error") != null) { %>
-            <div class="alert alert-custom alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <%= request.getAttribute("error") %>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <% } %>
+            <!-- ALERTS -->
+
+            <c:if test="${not empty success}">
+                <div class="alert alert-custom alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                        ${success}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+
+            <c:if test="${not empty error}">
+                <div class="alert alert-custom alert-error alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                        ${error}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
 
             <!-- Login Form -->
             <form action="${pageContext.request.contextPath}/login" method="post">
