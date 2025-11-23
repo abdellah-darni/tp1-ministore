@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "ProductServlet", value = "/products")
+@WebServlet(name = "ProductServlet", value = {"/products", "/products/*"})
 public class ProductServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(ProductServlet.class);
     private ProductDAO productDAO;
@@ -23,85 +23,69 @@ public class ProductServlet extends HttpServlet {
         productDAO = new ProductDAO();
     }
 
+    @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 //        if(true) throw new RuntimeException("Test Error");
 
         processMessages(request);
 
-        String action = request.getParameter("action");
-        logger.trace("doGet called. Action: {}", action);
-        String idParm = request.getParameter("id");
+        String path = request.getPathInfo();
+        logger.trace("doGet called. Path: {}", path);
 
-        if ("ADD".equals(action) || "EDIT".equals(action)) {
-            if ("EDIT".equals(action)) {
-                try {
-                    if (idParm == null) throw new NumberFormatException();
-                    int id = Integer.parseInt(idParm);
-                    logger.debug("Fetching product for Edit. ID: {}", id);
-
-                    Product product = productDAO.getProductById(id);
-                    request.setAttribute("product", product);
-                } catch (NumberFormatException e) {
-                    logger.error("Invalid ID passed to Edit: {}", idParm);
-                    response.sendRedirect(request.getContextPath() + "/products?error=InvalidID");
-                    return;
-                }
-            }
+        if (path == null || path.equals("/")) {
+            listProducts(request, response);
+        } else if (path.equals("/new")) {
             request.getRequestDispatcher("/WEB-INF/views/product/form.jsp").forward(request, response);
-            return;
+        } else if (path.equals("/edit")) {
+            showEditForm(request, response);
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
 
+    }
+
+    @Override
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String path = request.getPathInfo();
+        logger.trace("doPost called. Path: {}", path);
+
+        if (path == null || path.equals("/")) {
+            createProduct(request, response);
+        } else if (path.equals("/update")) {
+            updateProduct(request, response);
+        } else if (path.equals("/delete")) {
+            deleteProduct(request, response);
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    private void listProducts(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<Product> products = productDAO.getAllProducts();
         logger.trace("Loaded {} products.", products.size());
         request.setAttribute("products", products);
         request.getRequestDispatcher("/WEB-INF/views/product/list.jsp").forward(request, response);
     }
 
-    private void processMessages(HttpServletRequest request) {
-        String success = request.getParameter("success");
-        String error = request.getParameter("error");
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String idParm = request.getParameter("id");
 
-        if (success != null) {
-            switch (success) {
-                case "Deleted" -> request.setAttribute("success", "Product deleted successfully!");
-                case "Updated" -> request.setAttribute("success", "Product updated successfully!");
-                case "Added" -> request.setAttribute("success", "Product added successfully!");
-                default -> request.setAttribute("success", success);
-            }
-        }
+        try {
+            if (idParm == null) throw new NumberFormatException();
+            int id = Integer.parseInt(idParm);
+            logger.debug("Fetching product for Edit. ID: {}", id);
 
-        if (error != null) {
-            switch (error) {
-                case "Deleted" -> request.setAttribute("error", "Product deletion Failed!");
-                case "Updated" -> request.setAttribute("error", "Product update Failed!");
-                case "Added" -> request.setAttribute("error", "Product addition Failed!");
-                case "InvalidData" -> request.setAttribute("error", "Please check your input data (Name/Price required).");
-                case "InvalidID" -> request.setAttribute("error", "Invalid Product ID.");
-                default -> request.setAttribute("error", error);
-            }
+            Product product = productDAO.getProductById(id);
+            request.setAttribute("product", product);
+            request.getRequestDispatcher("/WEB-INF/views/product/form.jsp").forward(request, response);
+        } catch (NumberFormatException e) {
+            logger.error("Invalid ID passed to Edit: {}", idParm);
+            response.sendRedirect(request.getContextPath() + "/products?error=InvalidID");
         }
     }
 
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String method = request.getParameter("_method");
-        logger.trace("doPost called. Method: {}", method);
-
-        if ("DELETE".equals(method)) {
-            handleDelete(request, response);
-            return;
-        }
-
-        String id = request.getParameter("id");
-
-        if (id == null || id.trim().isEmpty()) {
-            handleAdd(request, response);
-            return;
-        }
-        handleEdit(request, response);
-    }
-
-    private void handleAdd(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        logger.debug("Handling ADD Product...");
+    private void createProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        logger.debug("Handling creating a New Product...");
         String nameParm = request.getParameter("name");
         String priceParm = request.getParameter("price");
 
@@ -127,11 +111,11 @@ public class ProductServlet extends HttpServlet {
 
         } catch (IllegalArgumentException e) {
             logger.error("ADD Error", e);
-            response.sendRedirect(request.getContextPath() + "/products?action=ADD&error=InvalidData");
+            response.sendRedirect(request.getContextPath() + "/products/new?error=InvalidData");
         }
     }
 
-    private void handleEdit(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void updateProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idParm = request.getParameter("id");
         logger.debug("Handling EDIT Product. ID: {}", idParm);
         String nameParm = request.getParameter("name");
@@ -161,11 +145,11 @@ public class ProductServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/products?success=Updated");
         } catch (IllegalArgumentException e) {
             logger.error("Edit Error", e);
-            response.sendRedirect(request.getContextPath() + "/products?action=EDIT&id=" + idParm + "&error=InvalidData");
+            response.sendRedirect(request.getContextPath() + "/products/edit?id=" + idParm + "&error=InvalidData");
         }
     }
 
-    private void handleDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void deleteProduct(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idParm = request.getParameter("id");
         logger.info("Handling DELETE Product. ID: {}", idParm);
 
@@ -186,6 +170,31 @@ public class ProductServlet extends HttpServlet {
         } catch (IllegalArgumentException e) {
             logger.error("Delete Error", e);
             response.sendRedirect(request.getContextPath() + "/products?error=InvalidData");
+        }
+    }
+
+    private void processMessages(HttpServletRequest request) {
+        String success = request.getParameter("success");
+        String error = request.getParameter("error");
+
+        if (success != null) {
+            switch (success) {
+                case "Deleted" -> request.setAttribute("success", "Product deleted successfully!");
+                case "Updated" -> request.setAttribute("success", "Product updated successfully!");
+                case "Added" -> request.setAttribute("success", "Product added successfully!");
+                default -> request.setAttribute("success", success);
+            }
+        }
+
+        if (error != null) {
+            switch (error) {
+                case "Deleted" -> request.setAttribute("error", "Product deletion Failed!");
+                case "Updated" -> request.setAttribute("error", "Product update Failed!");
+                case "Added" -> request.setAttribute("error", "Product addition Failed!");
+                case "InvalidData" -> request.setAttribute("error", "Please check your input data (Name/Price required).");
+                case "InvalidID" -> request.setAttribute("error", "Invalid Product ID.");
+                default -> request.setAttribute("error", error);
+            }
         }
     }
 

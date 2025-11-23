@@ -183,7 +183,7 @@
             <p class="text-theme-muted mb-0">Manage your product inventory</p>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0">
-            <a href="${pageContext.request.contextPath}/products?action=ADD" class="btn btn-theme">
+            <a href="${pageContext.request.contextPath}/products/new" class="btn btn-theme">
                 <i class="fas fa-plus me-2"></i>Add New Product
             </a>
         </div>
@@ -229,7 +229,7 @@
                                 </div>
 
                                 <div class="d-flex gap-2 mt-auto">
-                                    <a href="${pageContext.request.contextPath}/products?action=EDIT&id=${p.id}"
+                                    <a href="${pageContext.request.contextPath}/products/edit?id=${p.id}"
                                        class="btn btn-outline-custom btn-sm flex-grow-1">
                                         <i class="fas fa-edit me-1"></i>Edit
                                     </a>
@@ -287,7 +287,7 @@
     function confirmDelete(productId, productName) {
         document.getElementById('productName').textContent = productName;
         document.getElementById('idInput').value = productId;
-        document.getElementById('deleteForm').action = '${pageContext.request.contextPath}/products';
+        document.getElementById('deleteForm').action = '${pageContext.request.contextPath}/products/delete';
 
         const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
         modal.show();

@@ -231,10 +231,22 @@
                         </div>
                     </c:if>
 
-                    <form action="${pageContext.request.contextPath}/products" method="post">
+                    <c:choose>
+                        <c:when test="${product != null && isEditMode}">
+                            <c:set var="formAction" value="${pageContext.request.contextPath}/products/update" />
+                        </c:when>
+                        <c:otherwise>
+                            <c:set var="formAction" value="${pageContext.request.contextPath}/products" />
+                        </c:otherwise>
+                    </c:choose>
 
-                        <input type="hidden" name="id" value="${product.id}">
-                        <input type="hidden" name="createdAt" value="${product.createdAt}">
+                    <form action="${formAction}" method="post">
+
+                        <c:if test="${isEditMode}">
+                            <input type="hidden" name="id" value="${product.id}">
+                            <input type="hidden" name="createdAt" value="${product.createdAt}">
+                        </c:if>
+
 
                         <div class="row g-3">
                             <div class="col-md-7">
